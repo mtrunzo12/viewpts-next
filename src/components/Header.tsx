@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Menu, User } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { AuthButton } from "./AuthButton";
+import { Search, Menu } from "lucide-react";
 
 export function Header() {
   return (
@@ -23,9 +24,7 @@ export function Header() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
+          <AuthButton />
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
