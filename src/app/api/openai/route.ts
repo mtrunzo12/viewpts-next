@@ -37,7 +37,25 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorData = await response.text();
+      console.error(`OpenAI API error ${response.status}:`, errorData);
+      
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: 'OpenAI API rate limit exceeded. Please try again later.' },
+          { status: 429 }
+        );
+      } else if (response.status === 401) {
+        return NextResponse.json(
+          { error: 'OpenAI API authentication failed. Please check your API key.' },
+          { status: 401 }
+        );
+      } else {
+        return NextResponse.json(
+          { error: `OpenAI API error: ${response.status} - ${errorData}` },
+          { status: response.status }
+        );
+      }
     }
 
     const data = await response.json();
