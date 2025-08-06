@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface RefereeRequest {
+  argument: string;
+  topic: string;
+  side: string;
+  context?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { prompt, content } = body;
+    const body: RefereeRequest = await request.json();
+    const { argument, topic, side, context } = body;
     
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -24,15 +31,31 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that summarizes content and provides balanced perspectives on topics.'
+            content: `You are an AI referee for debates. Your role is to:
+1. Fact-check arguments for accuracy
+2. Identify logical fallacies
+3. Suggest counterpoints
+4. Rate argument strength (1-10)
+5. Ensure fair and balanced discourse
+
+Be objective, cite sources when possible, and encourage healthy debate.`
           },
           {
             role: 'user',
-            content: prompt || `Please provide a balanced summary of the following content: ${content}`
+            content: `Topic: ${topic}
+Side: ${side}
+Argument: ${argument}
+${context ? `Context: ${context}` : ''}
+
+Please analyze this argument and provide:
+1. Fact-check results
+2. Logical strength assessment
+3. Potential counterpoints
+4. Overall score (1-10)`
           }
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 800,
+        temperature: 0.3,
       }),
     });
 
@@ -42,22 +65,17 @@ export async function POST(request: NextRequest) {
       
       if (response.status === 429) {
         return NextResponse.json(
-          { error: 'OpenAI API rate limit exceeded. Please try again later.' },
+          { error: 'AI Referee temporarily unavailable due to rate limits.' },
           { status: 429 }
-        );
-      } else if (response.status === 401) {
-        return NextResponse.json(
-          { error: 'OpenAI API authentication failed. Please check your API key.' },
-          { status: 401 }
         );
       } else if (response.status === 403 || errorData.includes('insufficient_quota')) {
         return NextResponse.json(
-          { error: 'OpenAI API quota exceeded. Please check your billing and usage limits.' },
+          { error: 'AI Referee temporarily unavailable due to quota limits.' },
           { status: 403 }
         );
       } else {
         return NextResponse.json(
-          { error: `OpenAI API error: ${response.status} - ${errorData}` },
+          { error: `AI Referee error: ${response.status}` },
           { status: response.status }
         );
       }
@@ -66,16 +84,17 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     
     return NextResponse.json({
-      source: 'openai',
-      summary: data.choices?.[0]?.message?.content || '',
+      source: 'ai_referee',
+      analysis: data.choices?.[0]?.message?.content || '',
+      timestamp: new Date().toISOString(),
       usage: data.usage || {}
     });
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('AI Referee error:', error);
     return NextResponse.json(
       { 
-        error: 'OpenAI service temporarily unavailable. This may be due to quota limits or service issues.',
-        fallback: 'Please try again later or contact support if the issue persists.'
+        error: 'AI Referee service temporarily unavailable.',
+        fallback: 'Manual moderation will be applied to this argument.'
       },
       { status: 500 }
     );

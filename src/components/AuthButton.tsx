@@ -7,7 +7,7 @@ import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function AuthButton() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const router = useRouter();

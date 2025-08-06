@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiCache, getCacheKey } from '../../../lib/cache';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || 'trending';
     const subreddit = searchParams.get('subreddit') || 'all';
+    
+    const cacheKey = getCacheKey('reddit', { q: query, subreddit });
+    const cachedData = apiCache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
     
     const clientId = process.env.REDDIT_CLIENT_ID;
     const clientSecret = process.env.REDDIT_SECRET;
@@ -49,11 +56,15 @@ export async function GET(request: NextRequest) {
 
     const data = await searchResponse.json();
     
-    return NextResponse.json({
+    const result = {
       source: 'reddit',
-      posts: data.data?.children?.map((child: any) => child.data) || [],
+      posts: data.data?.children?.map((child: { data: unknown }) => child.data) || [],
       subreddit: subreddit
-    });
+    };
+    
+    apiCache.set(cacheKey, result, 15);
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Reddit API error:', error);
     return NextResponse.json(

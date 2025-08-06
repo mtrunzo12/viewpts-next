@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiCache, getCacheKey } from '../../../lib/cache';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || 'trending';
+    
+    const cacheKey = getCacheKey('youtube', { q: query });
+    const cachedData = apiCache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
     
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
@@ -28,11 +35,15 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     
-    return NextResponse.json({
+    const result = {
       source: 'youtube',
       videos: data.items || [],
       pageInfo: data.pageInfo || {}
-    });
+    };
+    
+    apiCache.set(cacheKey, result, 15);
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error('YouTube API error:', error);
     return NextResponse.json(
