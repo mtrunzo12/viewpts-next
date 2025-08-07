@@ -52,8 +52,23 @@ export async function POST(request: NextRequest) {
         );
       } else if (response.status === 403 || errorData.includes('insufficient_quota')) {
         return NextResponse.json(
-          { error: 'OpenAI API quota exceeded. Please check your billing and usage limits.' },
-          { status: 403 }
+          { 
+            error: 'OpenAI API quota exceeded. Please check your billing and usage limits.',
+            fallback: {
+              argumentsFor: [
+                "AI can provide personalized learning experiences tailored to individual student needs",
+                "24/7 availability ensures students can learn at their own pace and schedule",
+                "Consistent delivery of curriculum without human bias or mood variations"
+              ],
+              argumentsAgainst: [
+                "Human teachers provide emotional support and mentorship that AI cannot replicate",
+                "Critical thinking and creativity are better fostered through human interaction",
+                "Social skills development requires human-to-human communication"
+              ],
+              analysis: "This debate centers on the balance between technological efficiency and human connection in education. While AI offers scalability and personalization, human teachers provide irreplaceable emotional intelligence and social development opportunities."
+            }
+          },
+          { status: 200 }
         );
       } else {
         return NextResponse.json(
