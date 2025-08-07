@@ -1,10 +1,10 @@
 "use client";
 
-import { Header } from "../components/Header";
-import { PersonalizedBriefing } from "../components/PersonalizedBriefing";
-import { Arena } from "../components/Arena";
-import { PtsDisplay } from "../components/PtsDisplay";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Header } from "@/components/Header";
+import { PersonalizedBriefing } from "@/components/PersonalizedBriefing";
+import { Arena } from "@/components/Arena";
+import { PtsDisplay } from "@/components/PtsDisplay";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const mockBriefingTiles = [
