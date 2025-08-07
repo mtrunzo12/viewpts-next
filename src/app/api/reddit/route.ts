@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiCache, getCacheKey } from '../../../lib/cache';
+import { apiCache, getCacheKey } from '@/lib/cache';
 
 export async function GET(request: NextRequest) {
   try {

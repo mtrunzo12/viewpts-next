@@ -39,15 +39,14 @@ interface DeepDiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   topic: string;
-  content: string;
 }
 
-export function DeepDiveModal({ isOpen, onClose, topic, content }: DeepDiveModalProps) {
+export function DeepDiveModal({ isOpen, onClose, topic }: DeepDiveModalProps) {
   const [loading, setLoading] = useState(false);
   const [deepDiveData, setDeepDiveData] = useState<DeepDiveData | null>(null);
   const [showInfluencers, setShowInfluencers] = useState<'for' | 'against' | null>(null);
 
-  const fetchDeepDive = async () => {
+  const fetchDeepDive = React.useCallback(async () => {
     console.log('fetchDeepDive called for topic:', topic);
     setLoading(true);
     
@@ -85,14 +84,14 @@ export function DeepDiveModal({ isOpen, onClose, topic, content }: DeepDiveModal
     
     setDeepDiveData(mockData);
     setLoading(false);
-  };
+  }, [topic]);
 
   React.useEffect(() => {
     if (isOpen) {
       setDeepDiveData(null);
       fetchDeepDive();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchDeepDive]);
 
   const InfluencerCircles = ({ influencers, stance }: { influencers: InfluencerProfile[], stance: 'for' | 'against' }) => (
     <div className="flex -space-x-2">

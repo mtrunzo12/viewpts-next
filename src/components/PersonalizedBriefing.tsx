@@ -46,7 +46,7 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
     setSelectedTopic(tile);
   };
 
-  const handleEnterArena = (tile: BriefingTile) => {
+  const handleEnterArena = () => {
     window.location.href = '/?tab=arena';
   };
 
@@ -163,7 +163,7 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
                   className="flex-1"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleEnterArena(tile);
+                    handleEnterArena();
                   }}
                 >
                   <Zap className="w-3 h-3 mr-1" />
