@@ -1,16 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Clock, Users, MessageSquare, TrendingUp, Zap } from "lucide-react";
+import { Clock, Users, MessageSquare, TrendingUp, Zap, ExternalLink } from "lucide-react";
+import { DeepDiveModal } from "./DeepDiveModal";
+import { TopicDashboard } from "./TopicDashboard";
 
 interface BriefingTile {
   id: string;
   title: string;
   summary: string;
   source: string;
+  sourceUrl?: string;
   influencerViewpoint: string;
   opposingViewpoint: string;
   category: string;
@@ -24,6 +27,43 @@ interface PersonalizedBriefingProps {
 }
 
 export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
+  const [deepDiveModal, setDeepDiveModal] = useState<{ isOpen: boolean; topic: string; content: string }>({
+    isOpen: false,
+    topic: '',
+    content: ''
+  });
+  const [selectedTopic, setSelectedTopic] = useState<BriefingTile | null>(null);
+
+  const handleDeepDive = (tile: BriefingTile) => {
+    setDeepDiveModal({
+      isOpen: true,
+      topic: tile.title,
+      content: `${tile.summary}\n\nInfluencer Viewpoint: ${tile.influencerViewpoint}\n\nOpposing Viewpoint: ${tile.opposingViewpoint}`
+    });
+  };
+
+  const handleTopicClick = (tile: BriefingTile) => {
+    setSelectedTopic(tile);
+  };
+
+  const handleEnterArena = (tile: BriefingTile) => {
+    window.location.href = '/?tab=arena';
+  };
+
+  if (selectedTopic) {
+    return (
+      <TopicDashboard 
+        topic={{
+          id: selectedTopic.id,
+          title: selectedTopic.title,
+          description: selectedTopic.summary,
+          category: selectedTopic.category
+        }}
+        onBack={() => setSelectedTopic(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -36,7 +76,11 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tiles.map((tile) => (
-          <Card key={tile.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card 
+            key={tile.id} 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => handleTopicClick(tile)}
+          >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <Badge variant="secondary" className="text-xs">
@@ -80,17 +124,48 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
                     {tile.engagement}
                   </span>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {tile.source}
-                </Badge>
+                {tile.sourceUrl ? (
+                  <a 
+                    href={tile.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center hover:text-blue-600 transition-colors"
+                  >
+                    <Badge variant="outline" className="text-xs mr-1">
+                      {tile.source}
+                    </Badge>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                ) : (
+                  <Badge variant="outline" className="text-xs">
+                    {tile.source}
+                  </Badge>
+                )}
               </div>
               
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeepDive(tile);
+                  }}
+                >
                   <MessageSquare className="w-3 h-3 mr-1" />
                   Deep Dive
                 </Button>
-                <Button size="sm" variant="default" className="flex-1">
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEnterArena(tile);
+                  }}
+                >
                   <Zap className="w-3 h-3 mr-1" />
                   Enter Arena
                 </Button>
@@ -99,6 +174,13 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
           </Card>
         ))}
       </div>
+
+      <DeepDiveModal
+        isOpen={deepDiveModal.isOpen}
+        onClose={() => setDeepDiveModal({ isOpen: false, topic: '', content: '' })}
+        topic={deepDiveModal.topic}
+        content={deepDiveModal.content}
+      />
     </div>
   );
 }

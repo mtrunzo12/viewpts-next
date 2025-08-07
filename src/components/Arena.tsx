@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Progress } from "./ui/progress";
 import { Clock, Users, Shield, Zap, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ArenaLeaderboard } from "./ArenaLeaderboard";
 
 interface DebateTopic {
   id: string;
@@ -19,19 +20,57 @@ interface DebateTopic {
   category: string;
 }
 
-interface ArenaProps {
-  topics: DebateTopic[];
+interface LeaderboardTopic {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  participants: number;
+  totalArguments: number;
+  trending: boolean;
+  sideA: {
+    name: string;
+    support: number;
+    topContributors: Array<{
+      name: string;
+      pts: number;
+      rank: number;
+    }>;
+  };
+  sideB: {
+    name: string;
+    support: number;
+    topContributors: Array<{
+      name: string;
+      pts: number;
+      rank: number;
+    }>;
+  };
 }
 
-export function Arena({ topics }: ArenaProps) {
+interface ArenaProps {
+  topics: DebateTopic[];
+  leaderboardTopics?: LeaderboardTopic[];
+}
+
+export function Arena({ topics, leaderboardTopics = [] }: ArenaProps) {
   const [selectedTopic, setSelectedTopic] = useState<DebateTopic | null>(null);
   const [selectedSide, setSelectedSide] = useState<'A' | 'B' | null>(null);
   const [argument, setArgument] = useState("");
+  const [showLeaderboard, setShowLeaderboard] = useState(true);
 
   const handleJoinDebate = (topic: DebateTopic) => {
     setSelectedTopic(topic);
     setSelectedSide(null);
     setArgument("");
+    setShowLeaderboard(false);
+  };
+
+  const handleJoinLeaderboardDebate = (topicId: string) => {
+    const topic = topics.find(t => t.id === topicId);
+    if (topic) {
+      handleJoinDebate(topic);
+    }
   };
 
   const handleSideSelection = (side: 'A' | 'B') => {
@@ -47,7 +86,10 @@ export function Arena({ topics }: ArenaProps) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => setSelectedTopic(null)}>
+          <Button variant="outline" onClick={() => {
+            setSelectedTopic(null);
+            setShowLeaderboard(true);
+          }}>
             ← Back to Arena
           </Button>
           <Badge variant="outline" className="text-sm">
@@ -149,10 +191,33 @@ export function Arena({ topics }: ArenaProps) {
     );
   }
 
+  if (showLeaderboard && leaderboardTopics.length > 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => setShowLeaderboard(false)}>
+            View All Debates
+          </Button>
+        </div>
+        <ArenaLeaderboard 
+          topics={leaderboardTopics} 
+          onJoinDebate={handleJoinLeaderboardDebate}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">The Arena</h2>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold">The Arena</h2>
+          {leaderboardTopics.length > 0 && (
+            <Button variant="outline" onClick={() => setShowLeaderboard(true)}>
+              View Leaderboard
+            </Button>
+          )}
+        </div>
         <Badge variant="outline" className="text-sm">
           <Zap className="w-3 h-3 mr-1" />
           {topics.length} Active Debates
