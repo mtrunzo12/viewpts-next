@@ -13,86 +13,104 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that summarizes content and provides balanced perspectives on topics.'
-          },
-          {
-            role: 'user',
-            content: prompt || `Please provide a balanced summary of the following content: ${content}`
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant that summarizes content and provides balanced perspectives on topics.'
+            },
+            {
+              role: 'user',
+              content: prompt || `Please provide a balanced summary of the following content: ${content}`
+            }
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`OpenAI API error ${response.status}:`, errorData);
-      
-      if (response.status === 429) {
-        return NextResponse.json(
-          { error: 'OpenAI API rate limit exceeded. Please try again later.' },
-          { status: 429 }
-        );
-      } else if (response.status === 401) {
-        return NextResponse.json(
-          { error: 'OpenAI API authentication failed. Please check your API key.' },
-          { status: 401 }
-        );
-      } else if (response.status === 403 || errorData.includes('insufficient_quota')) {
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`OpenAI API error ${response.status}:`, errorData);
+        
         return NextResponse.json(
           { 
-            error: 'OpenAI API quota exceeded. Please check your billing and usage limits.',
+            error: 'OpenAI API quota/rate limit exceeded. Using fallback content.',
             fallback: {
               argumentsFor: [
-                "AI can provide personalized learning experiences tailored to individual student needs",
-                "24/7 availability ensures students can learn at their own pace and schedule",
-                "Consistent delivery of curriculum without human bias or mood variations"
+                "Strong evidence supports this position with documented benefits",
+                "Multiple studies and expert opinions validate this perspective", 
+                "Real-world implementation has shown positive outcomes"
               ],
               argumentsAgainst: [
-                "Human teachers provide emotional support and mentorship that AI cannot replicate",
-                "Critical thinking and creativity are better fostered through human interaction",
-                "Social skills development requires human-to-human communication"
+                "Significant concerns have been raised by experts in the field",
+                "Alternative approaches may be more effective or sustainable",
+                "Potential negative consequences need careful consideration"
               ],
-              analysis: "This debate centers on the balance between technological efficiency and human connection in education. While AI offers scalability and personalization, human teachers provide irreplaceable emotional intelligence and social development opportunities."
+              analysis: "This topic involves complex considerations with valid arguments on multiple sides. A balanced approach requires weighing the evidence, considering different stakeholder perspectives, and evaluating both short-term and long-term implications."
             }
           },
           { status: 200 }
         );
-      } else {
-        return NextResponse.json(
-          { error: `OpenAI API error: ${response.status} - ${errorData}` },
-          { status: response.status }
-        );
       }
-    }
 
-    const data = await response.json();
-    
-    return NextResponse.json({
-      source: 'openai',
-      summary: data.choices?.[0]?.message?.content || '',
-      usage: data.usage || {}
-    });
+      const data = await response.json();
+      
+      return NextResponse.json({
+        source: 'openai',
+        summary: data.choices?.[0]?.message?.content || '',
+        usage: data.usage || {}
+      });
+    } catch (fetchError) {
+      console.error('OpenAI fetch error:', fetchError);
+      return NextResponse.json(
+        { 
+          error: 'OpenAI API temporarily unavailable. Using fallback content.',
+          fallback: {
+            argumentsFor: [
+              "Strong evidence supports this position with documented benefits",
+              "Multiple studies and expert opinions validate this perspective", 
+              "Real-world implementation has shown positive outcomes"
+            ],
+            argumentsAgainst: [
+              "Significant concerns have been raised by experts in the field",
+              "Alternative approaches may be more effective or sustainable",
+              "Potential negative consequences need careful consideration"
+            ],
+            analysis: "This topic involves complex considerations with valid arguments on multiple sides. A balanced approach requires weighing the evidence, considering different stakeholder perspectives, and evaluating both short-term and long-term implications."
+          }
+        },
+        { status: 200 }
+      );
+    }
   } catch (error) {
     console.error('OpenAI API error:', error);
     return NextResponse.json(
       { 
-        error: 'OpenAI service temporarily unavailable. This may be due to quota limits or service issues.',
-        fallback: 'Please try again later or contact support if the issue persists.'
+        error: 'OpenAI service temporarily unavailable. Using fallback content.',
+        fallback: {
+          argumentsFor: [
+            "Strong evidence supports this position with documented benefits",
+            "Multiple studies and expert opinions validate this perspective", 
+            "Real-world implementation has shown positive outcomes"
+          ],
+          argumentsAgainst: [
+            "Significant concerns have been raised by experts in the field",
+            "Alternative approaches may be more effective or sustainable",
+            "Potential negative consequences need careful consideration"
+          ],
+          analysis: "This topic involves complex considerations with valid arguments on multiple sides. A balanced approach requires weighing the evidence, considering different stakeholder perspectives, and evaluating both short-term and long-term implications."
+        }
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }
