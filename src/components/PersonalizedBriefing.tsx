@@ -27,18 +27,16 @@ interface PersonalizedBriefingProps {
 }
 
 export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
-  const [deepDiveModal, setDeepDiveModal] = useState<{ isOpen: boolean; topic: string; content: string }>({
+  const [deepDiveModal, setDeepDiveModal] = useState<{ isOpen: boolean; topic: string }>({
     isOpen: false,
-    topic: '',
-    content: ''
+    topic: ''
   });
   const [selectedTopic, setSelectedTopic] = useState<BriefingTile | null>(null);
 
   const handleDeepDive = (tile: BriefingTile) => {
     setDeepDiveModal({
       isOpen: true,
-      topic: tile.title,
-      content: `${tile.summary}\n\nInfluencer Viewpoint: ${tile.influencerViewpoint}\n\nOpposing Viewpoint: ${tile.opposingViewpoint}`
+      topic: tile.title
     });
   };
 
@@ -177,9 +175,8 @@ export function PersonalizedBriefing({ tiles }: PersonalizedBriefingProps) {
 
       <DeepDiveModal
         isOpen={deepDiveModal.isOpen}
-        onClose={() => setDeepDiveModal({ isOpen: false, topic: '', content: '' })}
+        onClose={() => setDeepDiveModal({ isOpen: false, topic: '' })}
         topic={deepDiveModal.topic}
-        content={deepDiveModal.content}
       />
     </div>
   );
